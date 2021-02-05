@@ -1,0 +1,7 @@
+Flask=>1.1.2
+flask_dropzone=>1.5.4
+kedro=>0.17.0
+kedro-static-viz=>0.3.0
+kedro-viz=>3.8.1
+pytest
+gunicorn
