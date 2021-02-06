@@ -1,7 +1,8 @@
 import os
 import uuid
 
-from flask import Flask, render_template, request, send_from_directory, session
+from flask import (Flask, render_template, request, send_file,
+                   send_from_directory, session)
 from flask_dropzone import Dropzone
 
 app = Flask(__name__, static_url_path="", static_folder="static")
@@ -31,7 +32,7 @@ def upload():
         viz_string = f"kedro static-viz --load-file {file_path} --directory {viz_directory} --no-serve"
         os.system(viz_string)
     session["uid"] = str(uuid.uuid4())
-    return render_template("dropzone.html", session_id=session["uid"])
+    return render_template("cover.html", session_id=session["uid"])
 
 
 @app.route("/pipeline/<name>")
@@ -41,6 +42,16 @@ def pipeline(name):
     viz_directory = os.path.join("pipes", name)
     app.static_folder = viz_directory
     return send_from_directory(viz_directory, "index.html")
+
+
+@app.route("/example_pipeline")
+def download_example():
+    return send_file(
+        "static/example_pipeline.json",
+        mimetype="application/json",
+        attachment_filename="example_pipeline.json",
+        as_attachment=True,
+    )
 
 
 if __name__ == "__main__":
