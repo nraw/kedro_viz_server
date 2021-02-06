@@ -4,6 +4,7 @@ import uuid
 from flask import (Flask, render_template, request, send_file,
                    send_from_directory, session)
 from flask_dropzone import Dropzone
+from kedro_static_viz import static_viz
 
 app = Flask(__name__, static_url_path="", static_folder="static")
 
@@ -29,8 +30,9 @@ def upload():
         file_path = os.path.join("pipes", filename)
         f.save(file_path)
         viz_directory = os.path.join("pipes", session_id)
-        viz_string = f"kedro static-viz --load-file {file_path} --directory {viz_directory} --no-serve"
-        os.system(viz_string)
+        static_viz(
+            load_file=file_path, directory=viz_directory, serve=False, browser=False
+        )
     session["uid"] = str(uuid.uuid4())
     return render_template("cover.html", session_id=session["uid"])
 
