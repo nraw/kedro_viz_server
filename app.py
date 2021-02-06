@@ -9,6 +9,7 @@ app = Flask(__name__, static_url_path="", static_folder="static")
 dropzone = Dropzone(app)
 app.config.update(
     SECRET_KEY=os.environ.get("SECRET_KEY", "hello"),
+    SEND_FILE_MAX_AGE_DEFAULT=0,
     # Flask-Dropzone config:
     DROPZONE_ALLOWED_FILE_CUSTOM=True,
     DROPZONE_ALLOWED_FILE_TYPE=".json",
