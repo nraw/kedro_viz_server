@@ -1,10 +1,8 @@
 import os
 import uuid
 
-from flask import (Flask, render_template, request, send_file,
-                   send_from_directory, session)
+from flask import Flask, render_template, request, send_file, session
 from flask_dropzone import Dropzone
-from kedro_static_viz import static_viz
 
 app = Flask(__name__, static_url_path="", static_folder="static")
 
@@ -21,18 +19,14 @@ app.config.update(
 
 @app.route("/", methods=["POST", "GET"])
 def upload():
-    app.static_folder = "static"
     session_id = str(uuid.uuid4())
     if request.method == "POST":
         session_id = session["uid"]
         f = request.files.get("file")
         filename = session_id + ".json"
-        file_path = os.path.join("pipes", filename)
+        file_path = os.path.join("static/pipes", filename)
         f.save(file_path)
-        viz_directory = os.path.join("pipes", session_id)
-        static_viz(
-            load_file=file_path, directory=viz_directory, serve=False, browser=False
-        )
+        os.system(f"./scripts/copy_js.sh {session_id}")
     session["uid"] = str(uuid.uuid4())
     return render_template("cover.html", session_id=session["uid"])
 
@@ -40,10 +34,9 @@ def upload():
 @app.route("/pipeline/<name>")
 def pipeline(name):
     print(name)
-
-    viz_directory = os.path.join("pipes", name)
-    app.static_folder = viz_directory
-    return send_from_directory(viz_directory, "index.html")
+    print(request.url)
+    url = request.url
+    return render_template("pipe.html", name=name, url=url)
 
 
 @app.route("/example_pipeline")
