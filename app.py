@@ -1,10 +1,23 @@
+import json
 import os
 import uuid
+from pathlib import Path
 
-from flask import Flask, render_template, request, send_file, session
+from flask import (Flask, redirect, render_template, request, send_file,
+                   session, url_for)
 from flask_dropzone import Dropzone
+from flask_sqlalchemy import SQLAlchemy
+
+import db.commands as commands
+import db.database as database
+from db.model import Model
+from src.utils import check_if_exists, get_file_path
 
 app = Flask(__name__, static_url_path="", static_folder="static")
+
+app.config.from_object(os.environ.get("APP_SETTINGS", "config.DevelopmentConfig"))
+database.init_app(app)
+commands.init_app(app)
 
 dropzone = Dropzone(app)
 app.config.update(
@@ -23,10 +36,13 @@ def upload():
     if request.method == "POST":
         session_id = session["uid"]
         f = request.files.get("file")
-        filename = session_id + ".json"
-        file_path = os.path.join("static/pipes", filename)
+        file_path = get_file_path(session_id)
         f.save(file_path)
         os.system(f"./scripts/copy_js.sh {session_id}")
+        pipeline = Path(file_path).read_text()
+        model = Model(id=session_id, pipeline=pipeline)
+        database.db.session.add(model)
+        database.db.session.commit()
     session["uid"] = str(uuid.uuid4())
     return render_template("cover.html", session_id=session["uid"])
 
@@ -35,6 +51,17 @@ def upload():
 def pipeline(name):
     print(name)
     print(request.url)
+    _pipe_exists = check_if_exists(name)
+    if not _pipe_exists:
+        pipe = Model.query.filter_by(id=name).first()
+        if not pipe:
+            print("lolno")
+            return redirect(url_for("upload"))
+        else:
+            print(pipe.pipeline)
+            file_path = get_file_path(name)
+            Path(file_path).write_text(pipe.pipeline)
+            os.system(f"./scripts/copy_js.sh {name}")
     url = request.url
     return render_template("pipe.html", name=name, url=url)
 
