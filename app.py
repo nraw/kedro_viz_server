@@ -2,6 +2,7 @@ import json
 import os
 import uuid
 from pathlib import Path
+from time import sleep
 
 from flask import (Flask, redirect, render_template, request, send_file,
                    session, url_for)
@@ -22,7 +23,7 @@ commands.init_app(app)
 dropzone = Dropzone(app)
 app.config.update(
     SECRET_KEY=os.environ.get("SECRET_KEY", "hello"),
-    SEND_FILE_MAX_AGE_DEFAULT=0,
+    #  SEND_FILE_MAX_AGE_DEFAULT=0,
     # Flask-Dropzone config:
     DROPZONE_ALLOWED_FILE_CUSTOM=True,
     DROPZONE_ALLOWED_FILE_TYPE=".json",
@@ -39,6 +40,7 @@ def upload():
         file_path = get_file_path(session_id)
         f.save(file_path)
         os.system(f"./scripts/copy_js.sh {session_id}")
+        sleep(1)
         pipeline = Path(file_path).read_text()
         model = Model(session_id=session_id, pipeline=pipeline)
         database.db.session.add(model)
@@ -62,6 +64,7 @@ def pipeline(name):
             file_path = get_file_path(name)
             Path(file_path).write_text(pipe.pipeline)
             os.system(f"./scripts/copy_js.sh {name}")
+            sleep(1)
     url = request.url
     return render_template("pipe.html", name=name, url=url)
 
