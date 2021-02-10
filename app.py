@@ -40,7 +40,7 @@ def upload():
         f.save(file_path)
         os.system(f"./scripts/copy_js.sh {session_id}")
         pipeline = Path(file_path).read_text()
-        model = Model(id=session_id, pipeline=pipeline)
+        model = Model(session_id=session_id, pipeline=pipeline)
         database.db.session.add(model)
         database.db.session.commit()
     session["uid"] = str(uuid.uuid4())
@@ -53,7 +53,7 @@ def pipeline(name):
     print(request.url)
     _pipe_exists = check_if_exists(name)
     if not _pipe_exists:
-        pipe = Model.query.filter_by(id=name).first()
+        pipe = Model.query.filter_by(session_id=name).first()
         if not pipe:
             print("lolno")
             return redirect(url_for("upload"))
